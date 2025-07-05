@@ -1,0 +1,1 @@
+worker: python super_bot.py
