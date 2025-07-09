@@ -1,59 +1,63 @@
-
 import requests
 import os
 import telegram
 from bs4 import BeautifulSoup
 
+# Load environment variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 AFFILIATE_TAG = os.getenv("AFFILIATE_TAG")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 
+# Initialize Telegram Bot
 bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
-def estrai_offerte_amazon():
+# Function to extract Amazon India deals
+def extract_amazon_deals():
     headers = {"User-Agent": "Mozilla/5.0"}
-    url = "https://www.amazon.it/gp/goldbox"
+    url = "https://www.amazon.in/gp/goldbox"
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    offerte = []
+    deals = []
     for div in soup.select("div.a-section.a-text-center"):
-        titolo = div.select_one("span.a-truncate-full")
+        title = div.select_one("span.a-truncate-full")
         link = div.find("a", href=True)
-        prezzo = div.select_one("span.a-price-whole")
+        price = div.select_one("span.a-price-whole")
 
-        if titolo and link and prezzo:
-            nome = titolo.get_text(strip=True)
-            href = "https://www.amazon.it" + link["href"].split("?")[0]
-            href_affiliato = href + f"?tag={AFFILIATE_TAG}"
-            prezzo_txt = prezzo.get_text(strip=True) + "€"
+        if title and link and price:
+            name = title.get_text(strip=True)
+            href = "https://www.amazon.in" + link["href"].split("?")[0]
+            affiliate_link = href + f"?tag={AFFILIATE_TAG}"
+            price_txt = price.get_text(strip=True) + "₹"
 
-            offerte.append({
-                "titolo": nome,
-                "prezzo": prezzo_txt,
-                "link": href_affiliato
+            deals.append({
+                "title": name,
+                "price": price_txt,
+                "link": affiliate_link
             })
 
-        if len(offerte) >= 3:
+        if len(deals) >= 3:
             break
 
-    return offerte
+    return deals
 
-def invia_messaggi():
-    offerte = estrai_offerte_amazon()
+# Function to send messages to Telegram channel
+def send_messages():
+    deals = extract_amazon_deals()
 
-    for offerta in offerte:
-        messaggio = f"📦 <b>{offerta['titolo']}</b>\n" \
-                    f"💶 <b>Prezzo:</b> {offerta['prezzo']}\n\n" \
-                    f"🛒 <a href='{offerta['link']}'>Acquista su Amazon</a>\n" \
-                    f"📤 <a href='{offerta['link']}'>Condividi con gli amici</a>"
+    for deal in deals:
+        message = f"📦 <b>{deal['title']}</b>\n" \
+                  f"💰 <b>Price:</b> {deal['price']}\n\n" \
+                  f"🛒 <a href='{deal['link']}'>Buy on Amazon</a>\n" \
+                  f"📤 <a href='{deal['link']}'>Share with friends</a>"
 
         bot.send_message(
             chat_id=CHANNEL_ID,
-            text=messaggio,
+            text=message,
             parse_mode=telegram.ParseMode.HTML,
             disable_web_page_preview=True
         )
 
+# Run the script
 if __name__ == "__main__":
-    invia_messaggi()
+    send_messages()
