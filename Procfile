@@ -1,1 +1,1 @@
-web: python super_bot.py
+web: python server.py
