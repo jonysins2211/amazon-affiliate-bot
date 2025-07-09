@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from super_bot import send_deal_messages
+from super_bot import send_messages
 
 app = Flask(__name__)
 
@@ -10,7 +10,7 @@ def index():
 
 @app.route('/run-bot')
 def run_bot():
-    send_deal_messages()
+    send_messages()
     return "📦 Bot executed and messages sent."
 
 if __name__ == "__main__":
